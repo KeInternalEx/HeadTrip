@@ -18,7 +18,7 @@ class UHtStatusEffectContainer : public UInterface
 
 /**
  * Interface describing something that can contain status effects.
- * See Gameplay/HtBaseCharacter for an example
+ * See Gameplay/HtBaseCharacter for an example of implementation.
  */
 class HTCORE_API IHtStatusEffectContainer
 {

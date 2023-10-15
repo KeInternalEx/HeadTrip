@@ -7,7 +7,7 @@
 #include "HtStatusEffect.generated.h"
 
 class IHtStatusEffectContainer;
-class UUserWidget;
+class UHtStatusEffectIcon;
 
 /**
  * Base class for status effects
@@ -52,20 +52,27 @@ protected:
 	inline void RepSetEffectMagnitude(uint16 NewValue);
 
 private:
-	UPROPERTY(Replicated) bool bApplied;
+	UPROPERTY(ReplicatedUsing="OnRep_EffectApplied") bool bApplied;
 
 private: // Private state, set during application
-	UPROPERTY(Replicated) uint16 EffectDuration;  // Can be changed at runtime via a function call. Usually only done on the server.
-	UPROPERTY(Replicated) uint16 EffectMagnitude; // Can be changed at runtime via a function call. Usually only done on the server.
+	UPROPERTY(ReplicatedUsing="OnRep_EffectDuration") uint16 EffectDuration;  // Can be changed at runtime via a function call. Usually only done on the server.
+	UPROPERTY(ReplicatedUsing="OnRep_EffectMagnitude") uint16 EffectMagnitude; // Can be changed at runtime via a function call. Usually only done on the server.
 
 private: // Runtime modification only supported on the client via function calls
 	UPROPERTY(EditDefaultsOnly) FText EffectName;
 	UPROPERTY(EditDefaultsOnly) FText EffectDescription;
 
-	UPROPERTY(EditDefaultsOnly, Instanced) UUserWidget* EffectIcon;
+	UPROPERTY(EditDefaultsOnly, Instanced) UHtStatusEffectIcon* EffectIcon;
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+
+protected:
+	UFUNCTION() void OnRep_EffectDuration(uint16 NewDuration);
+	UFUNCTION() void OnRep_EffectMagnitude(uint16 NewMagnitude);
+	UFUNCTION() void OnRep_EffectApplied(bool bNewApplied);
+
 
 	/**
 	 * Called internally to remove the effect
@@ -185,14 +192,14 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure) int32 GetEffectMagnitude() const { return EffectMagnitude; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure) const FText& GetEffectName() const { return EffectName; }
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic) void SetEffectName(const FText& NewValue) { EffectName = NewValue; }
-	
+
 	UFUNCTION(BlueprintCallable, BlueprintPure) const FText& GetEffectDescription() const { return EffectDescription; }
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic) void SetEffectDescription(const FText& NewValue) { EffectDescription = NewValue; }
+	
+	UFUNCTION(BlueprintCallable, BlueprintCosmetic) void SetEffectName(const FText& NewValue);
+	
+	UFUNCTION(BlueprintCallable, BlueprintCosmetic) void SetEffectDescription(const FText& NewValue);
 
-	UFUNCTION(BlueprintCallable) UUserWidget* GetEffectIcon() { return EffectIcon; }
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic) void SetEffectIcon(UUserWidget* NewWidget) { EffectIcon = NewWidget; }
-
+	UFUNCTION(BlueprintCallable) UHtStatusEffectIcon* GetEffectIcon() { return EffectIcon; }
 	UFUNCTION(BlueprintCallable, BlueprintPure) bool IsApplied() const { return bApplied; }
 #pragma endregion
 };

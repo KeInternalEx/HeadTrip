@@ -3,6 +3,7 @@
 
 #include "Gameplay/StatusEffect/HtStatusEffect.h"
 #include "Gameplay/StatusEffect/HtStatusEffectContainer.h"
+#include "Gameplay/StatusEffect/HtStatusEffectIcon.h"
 
 #include "Blueprint/UserWidget.h"
 
@@ -15,6 +16,10 @@ AHtStatusEffect::AHtStatusEffect()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 1.0f / AHtStatusEffect::EffectTickFreqHz;
+
+#ifndef WITH_SERVER_CODE
+	EffectIcon->SetStatusEffect(this);
+#endif
 }
 
 // Called when the game starts or when spawned
@@ -49,8 +54,46 @@ void AHtStatusEffect::Tick(float DeltaTime)
 	}
 }
 
+
 inline IHtStatusEffectContainer* AHtStatusEffect::GetContainer() const { return Cast<IHtStatusEffectContainer>(GetEffectTarget()); }
 inline AActor* AHtStatusEffect::GetEffectTarget() const { AActor* Parent = GetAttachParentActor(); check(Parent != nullptr); return Parent; }
+
+
+void AHtStatusEffect::OnRep_EffectDuration(uint16 NewDuration)
+{
+	if (EffectDuration == NewDuration)
+		return;
+
+	EffectIcon->BpDurationChanged(EffectDuration, NewDuration);
+	EffectDuration = NewDuration;
+}
+
+void AHtStatusEffect::OnRep_EffectMagnitude(uint16 NewMagnitude)
+{
+	if (EffectMagnitude == NewMagnitude)
+		return;
+
+	EffectIcon->BpMagnitudeChanged(EffectMagnitude, NewMagnitude);
+	EffectMagnitude = NewMagnitude;
+}
+
+void AHtStatusEffect::OnRep_EffectApplied(bool bNewApplied)
+{
+	if (bApplied == bNewApplied)
+		return;
+
+	if (bNewApplied)
+	{
+		EffectIcon->BpApplied();
+	}
+	else
+	{
+		EffectIcon->BpRemoved();
+	}
+
+	bApplied = bNewApplied;
+}
+
 
 void AHtStatusEffect::ApplyInternal_Implementation(int32 Duration, int32 Magnitude)
 {
@@ -185,4 +228,18 @@ void AHtStatusEffect::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_WITH_PARAMS_FAST(AHtStatusEffect, bApplied, Params);
 	DOREPLIFETIME_WITH_PARAMS_FAST(AHtStatusEffect, EffectDuration, Params);
 	DOREPLIFETIME_WITH_PARAMS_FAST(AHtStatusEffect, EffectMagnitude, Params);
+}
+
+
+
+void AHtStatusEffect::SetEffectName(const FText& NewValue)
+{
+	EffectIcon->BpNameChanged(EffectName, NewValue);
+	EffectName = NewValue;
+}
+
+void AHtStatusEffect::SetEffectDescription(const FText& NewValue)
+{
+	EffectIcon->BpDescriptionChanged(EffectDescription, NewValue);
+	EffectDescription = NewValue;
 }
